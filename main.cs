@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 class Empleado
@@ -22,7 +21,8 @@ class Empleado
 
 class Menu
 {
-    private List<Empleado> empleados = new List<Empleado>();
+    private Empleado[] empleados = new Empleado[100]; // Tamaño fijo del arreglo
+    private int cantidadEmpleados = 0;
 
     public void MostrarMenu()
     {
@@ -72,27 +72,44 @@ class Menu
 
     public void AgregarEmpleado()
     {
-        Console.WriteLine("Ingrese los datos del empleado:");
-        Console.Write("Cédula: ");
-        string cedula = Console.ReadLine();
-        Console.Write("Nombre: ");
-        string nombre = Console.ReadLine();
-        Console.Write("Dirección: ");
-        string direccion = Console.ReadLine();
-        Console.Write("Teléfono: ");
-        string telefono = Console.ReadLine();
-        Console.Write("Salario: ");
-        double salario = double.Parse(Console.ReadLine());
+        if (cantidadEmpleados < empleados.Length)
+        {
+            Console.WriteLine("Ingrese los datos del empleado:");
+            Console.Write("Cédula: ");
+            string cedula = Console.ReadLine();
+            Console.Write("Nombre: ");
+            string nombre = Console.ReadLine();
+            Console.Write("Dirección: ");
+            string direccion = Console.ReadLine();
+            Console.Write("Teléfono: ");
+            string telefono = Console.ReadLine();
+            Console.Write("Salario: ");
+            double salario = double.Parse(Console.ReadLine());
 
-        empleados.Add(new Empleado(cedula, nombre, direccion, telefono, salario));
-        Console.WriteLine("Empleado agregado con éxito.");
+            empleados[cantidadEmpleados] = new Empleado(cedula, nombre, direccion, telefono, salario);
+            cantidadEmpleados++;
+            Console.WriteLine("Empleado agregado con éxito.");
+        }
+        else
+        {
+            Console.WriteLine("No se pueden agregar más empleados. El arreglo está lleno.");
+        }
     }
 
     public void ConsultarEmpleados()
     {
         Console.Write("Ingrese la cédula del empleado a consultar: ");
         string cedula = Console.ReadLine();
-        Empleado empleado = empleados.Find(e => e.Cedula == cedula);
+        Empleado empleado = null;
+
+        for (int i = 0; i < cantidadEmpleados; i++)
+        {
+            if (empleados[i].Cedula == cedula)
+            {
+                empleado = empleados[i];
+                break;
+            }
+        }
 
         if (empleado != null)
         {
@@ -113,7 +130,16 @@ class Menu
     {
         Console.Write("Ingrese la cédula del empleado a modificar: ");
         string cedula = Console.ReadLine();
-        Empleado empleado = empleados.Find(e => e.Cedula == cedula);
+        Empleado empleado = null;
+
+        for (int i = 0; i < cantidadEmpleados; i++)
+        {
+            if (empleados[i].Cedula == cedula)
+            {
+                empleado = empleados[i];
+                break;
+            }
+        }
 
         if (empleado != null)
         {
@@ -138,11 +164,24 @@ class Menu
     {
         Console.Write("Ingrese la cédula del empleado a borrar: ");
         string cedula = Console.ReadLine();
-        Empleado empleado = empleados.Find(e => e.Cedula == cedula);
+        int indiceBorrar = -1;
 
-        if (empleado != null)
+        for (int i = 0; i < cantidadEmpleados; i++)
         {
-            empleados.Remove(empleado);
+            if (empleados[i].Cedula == cedula)
+            {
+                indiceBorrar = i;
+                break;
+            }
+        }
+
+        if (indiceBorrar != -1)
+        {
+            for (int i = indiceBorrar; i < cantidadEmpleados - 1; i++)
+            {
+                empleados[i] = empleados[i + 1];
+            }
+            cantidadEmpleados--;
             Console.WriteLine("Empleado borrado con éxito.");
         }
         else
@@ -153,7 +192,8 @@ class Menu
 
     public void InicializarArreglos()
     {
-        empleados.Clear();
+        empleados = new Empleado[100];
+        cantidadEmpleados = 0;
         Console.WriteLine("Arreglos inicializados.");
     }
 
@@ -196,24 +236,69 @@ class Menu
 
     public void ListarEmpleadosPorNombre()
     {
-        var empleadosOrdenados = empleados.OrderBy(e => e.Nombre).ToList();
-        Console.WriteLine("Lista de empleados ordenados por nombre:");
-        foreach (var empleado in empleadosOrdenados)
+        // Ordenar los empleados por nombre utilizando un algoritmo de ordenamiento, como el método de la burbuja.
+        for (int i = 0; i < cantidadEmpleados - 1; i++)
         {
-            Console.WriteLine($"Nombre: {empleado.Nombre}, Cédula: {empleado.Cedula}");
+            for (int j = i + 1; j < cantidadEmpleados; j++)
+            {
+                if (string.Compare(empleados[i].Nombre, empleados[j].Nombre) > 0)
+                {
+                    // Intercambiar empleados si están fuera de orden
+                    Empleado temp = empleados[i];
+                    empleados[i] = empleados[j];
+                    empleados[j] = temp;
+                }
+            }
+        }
+
+        Console.WriteLine("Lista de empleados ordenados por nombre:");
+        for (int i = 0; i < cantidadEmpleados; i++)
+        {
+            Console.WriteLine($"Nombre: {empleados[i].Nombre}, Cédula: {empleados[i].Cedula}");
         }
     }
 
     public void CalcularPromedioSalarios()
     {
-        double promedio = empleados.Average(e => e.Salario);
+        if (cantidadEmpleados == 0)
+        {
+            Console.WriteLine("No hay empleados para calcular el promedio de salarios.");
+            return;
+        }
+
+        double sumaSalarios = 0;
+        for (int i = 0; i < cantidadEmpleados; i++)
+        {
+            sumaSalarios += empleados[i].Salario;
+        }
+
+        double promedio = sumaSalarios / cantidadEmpleados;
         Console.WriteLine($"El promedio de los salarios es: {promedio}");
     }
 
     public void CalcularSalarioExtremo()
     {
-        double salarioMaximo = empleados.Max(e => e.Salario);
-        double salarioMinimo = empleados.Min(e => e.Salario);
+        if (cantidadEmpleados == 0)
+        {
+            Console.WriteLine("No hay empleados para calcular el salario más alto y más bajo.");
+            return;
+        }
+
+        double salarioMaximo = empleados[0].Salario;
+        double salarioMinimo = empleados[0].Salario;
+
+        for (int i = 1; i < cantidadEmpleados; i++)
+        {
+            if (empleados[i].Salario > salarioMaximo)
+            {
+                salarioMaximo = empleados[i].Salario;
+            }
+            if (empleados[i].Salario < salarioMinimo)
+            {
+                salarioMinimo = empleados[i].Salario;
+            }
+        }
+
         Console.WriteLine($"Salario más alto: {salarioMaximo}");
         Console.WriteLine($"Salario más bajo: {salarioMinimo}");
     }
@@ -224,7 +309,6 @@ class Program
     static void Main()
     {
         Menu menu = new Menu();
-        menu.MostrarMenu();     
+        menu.MostrarMenu();
+    }
 }
-  }
-
